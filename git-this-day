@@ -1,20 +1,32 @@
-#!/bin/bash
+#!/usr/bin/awk -f
 
-md=$(date "+%m-%d")
+BEGIN {
+  srand()
 
-fy=$(for root in $(git rev-list --max-parents=0 HEAD); do
-  git show -s --format=%cd --date=format:%Y "$root"
-done | sort -hr | tail -n1)
+  if (system("git rev-parse --show-toplevel >/dev/null 2>&1")) {
+    exit 1
+  }
 
-[ -z "$fy" ] && { echo "hm, couldn' find first commit"; exit 1; }
+  refycmd = "git show -s --format=%cd --date=format:%Y"
+  refycmd | getline ly
 
-a=$(for n in $(seq "$fy" $(( $(date +"%Y") - 1))); do
-  printf >/dev/stderr '%s ' "$n"
-  git log --pretty=tformat:%H --since="$n-$md 00:00" --until="$n-$md 23:59"
-done | shuf | head -n1)
-printf >/dev/stderr '\n'
+  while ("git rev-list --max-parents=0 HEAD" | getline root) {
+    refycmd " " root | getline y
+    if (!fy || y < fy) fy = y;
+  }
 
-[ -z "$a" ] && { echo "no commit on this day in history"; exit 0; }
+  "date +%m-%d" | getline md
+  for (y = fy; y <= ly; y++) {
+    while (sprintf("git log --pretty=tformat:%%H --since=\"%s-%s 00:00\" --until=\"%s-%s 23:59\"", y, md, y, md) | getline ref) {
+        refs[refn++] = ref
+        print ref, y
+    }
+  }
 
-git show "$a"
-exit $?
+  if (!refn) {
+    print "No commit on this day in history"
+    exit 0
+  }
+
+  exit system("git show -s " refs[int(rand() * refn)])
+}
