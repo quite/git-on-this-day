@@ -9,6 +9,10 @@ BEGIN {
 
   refycmd = "git show -s --format=%cd --date=format:%Y"
   refycmd | getline ly
+  "date +%Y" | getline cy
+  if (ly == cy) {
+    ly--;
+  }
 
   while ("git rev-list --max-parents=0 HEAD" | getline root) {
     refycmd " " root | getline y
@@ -20,7 +24,7 @@ BEGIN {
     while (sprintf("git log --pretty=tformat:%%H " \
                    "--since=\"%s-%s 00:00\" --until=\"%s-%s 23:59\"",
                    y, md, y, md) | getline ref) {
-        refs[refn++] = ref
+      refs[refn++] = ref
     }
   }
 
