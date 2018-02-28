@@ -17,9 +17,10 @@ BEGIN {
 
   "date +%m-%d" | getline md
   for (y = fy; y <= ly; y++) {
-    while (sprintf("git log --pretty=tformat:%%H --since=\"%s-%s 00:00\" --until=\"%s-%s 23:59\"", y, md, y, md) | getline ref) {
+    while (sprintf("git log --pretty=tformat:%%H " \
+                   "--since=\"%s-%s 00:00\" --until=\"%s-%s 23:59\"",
+                   y, md, y, md) | getline ref) {
         refs[refn++] = ref
-        print ref, y
     }
   }
 
