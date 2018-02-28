@@ -1,0 +1,20 @@
+#!/bin/bash
+
+md=$(date "+%m-%d")
+
+fy=$(for root in $(git rev-list --max-parents=0 HEAD); do
+  git show -s --format=%cd --date=format:%Y "$root"
+done | sort -hr | tail -n1)
+
+[ -z "$fy" ] && { echo "hm, couldn' find first commit"; exit 1; }
+
+a=$(for n in $(seq "$fy" $(( $(date +"%Y") - 1))); do
+  printf >/dev/stderr '%s ' "$n"
+  git log --pretty=tformat:%H --since="$n-$md 00:00" --until="$n-$md 23:59"
+done | shuf | head -n1)
+printf >/dev/stderr '\n'
+
+[ -z "$a" ] && { echo "no commit on this day in history"; exit 0; }
+
+git show "$a"
+exit $?
