@@ -1,2 +1,2 @@
 install:
-	cp git-this-day /usr/local/bin/
+	cp git-on-this-day /usr/local/bin/
